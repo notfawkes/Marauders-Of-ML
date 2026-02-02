@@ -19,8 +19,7 @@ export function AIOutput({ loading, data }: AIOutputProps) {
                         <Terminal className="h-3 w-3" />
                         <span className="font-semibold tracking-wide">SYSTEM_OUTPUT</span>
                     </div>
-                    <div className="px-1 text-gray-500 pb-2 cursor-pointer hover:text-[#08CB00] transition-colors">DEBUG_CONSOLE</div>
-                    <div className="px-1 text-gray-500 pb-2 cursor-pointer hover:text-[#08CB00] transition-colors">PROBLEMS</div>
+
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-4 w-4 text-gray-600 hover:text-[#08CB00]">
