@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ReqForge - AI-Powered Requirements Architect
 
-## Getting Started
+ReqForge is an AI-powered requirements gathering and architectural design tool. It uses a local LLM (Ollama) to generate user stories, API endpoints, and edge cases based on user input, storing conversation history in proper contexts.
 
-First, run the development server:
+## Tech Stack
+
+- **Frontend**: Next.js 14, TailwindCSS, React Markdown, Lucide Icons
+- **Backend**: FastAPI (Python), JWT Authentication
+- **Database**: MongoDB (Local) for chat history & sessions
+- **Vector DB**: Qdrant (Local) for memory/RAG
+- **AI Engine**: Ollama (Running locally with `qwen3` and `nomic-embed-text`)
+
+---
+
+## Prerequisites
+
+Ensure you have the following installed:
+
+1.  **Node.js** (v18+)
+2.  **Python** (v3.9+)
+3.  **Ollama** ([Download here](https://ollama.com))
+4.  **MongoDB** (Community Edition or Docker)
+5.  **Qdrant** (Docker recommended)
+
+---
+
+## Setup Instructions
+
+### 1. Setup Local AI Models (Ollama)
+
+Install Ollama and pull the required models specified in `app/config.py`.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Start Ollama service
+ollama serve
+
+# In a new terminal, pull the models
+ollama pull qwen3
+ollama pull nomic-embed-text
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Setup Databases
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can run MongoDB and Qdrant using Docker or local installations.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### Option A: Docker (Recommended)
 
-## Learn More
+```bash
+# Run MongoDB
+docker run -d -p 27017:27017 --name local-mongo mongo:latest
 
-To learn more about Next.js, take a look at the following resources:
+# Run Qdrant
+docker run -d -p 6333:6333 --name local-qdrant qdrant/qdrant
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### Option B: Local Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **MongoDB**: Start `mongod` service on port `27017`.
+- **Qdrant**: Download binary and run on port `6333`.
 
-## Deploy on Vercel
+### 3. Backend Setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Navigate to the project root (where `main.py` is located).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # Mac/Linux
+# .venv\Scripts\activate   # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start the Backend Server
+uvicorn app.main:app --reload --port 8000
+```
+
+The backend API will be available at `http://localhost:8000`.
+Docs available at `http://localhost:8000/docs`.
+
+### 4. Frontend Setup
+
+Navigate to the frontend directory (`reqforge`).
+
+```bash
+cd reqforge
+
+# Install dependencies
+npm install
+
+# Run the development server
+npm run dev
+```
+
+The frontend will be available at `http://localhost:3000`.
+
+---
+
+## Configuration
+
+Environment variables can be set in a `.env` file or exported in your shell. Defaults are configured in `app/config.py`.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `MONGO_URI` | `mongodb://localhost:27017` | MongoDB connection string |
+| `QDRANT_HOST` | `localhost` | Qdrant host |
+| `QDRANT_PORT` | `6333` | Qdrant port |
+| `OLLAMA_BASE_URL` | `http://localhost:11434/v1` | Ollama API URL |
+| `SECRET_KEY` | `hackathon_...` | JWT Secret Key |
+
+---
+
+## Features
+
+- **Real-time Chat**: Conversational interface with memory.
+- **Structured Output**: AI responses are styled as system logs with markdown support.
+- **History Tracking**: All conversations are saved and can be resumed.
+- **RAG Memory**: Uses Qdrant to recall context from previous interactions.
