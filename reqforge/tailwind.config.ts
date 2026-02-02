@@ -1,4 +1,7 @@
 import type { Config } from "tailwindcss";
+// @ts-expect-error - No types available for this plugin
+import tailwindAnimate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 const config: Config = {
     content: [
@@ -71,6 +74,9 @@ const config: Config = {
             },
         },
     },
-    plugins: [],
+    plugins: [
+        tailwindAnimate,
+        typography
+    ],
 };
 export default config;

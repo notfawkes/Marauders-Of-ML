@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Plus, MessageSquare, Box } from "lucide-react"
+import { Plus, MessageSquare } from "lucide-react"
 import NeuralBackground from "@/components/NeuralBackground"
 
 interface SidebarProps {
@@ -53,9 +53,7 @@ export function Sidebar({ authToken }: SidebarProps) {
             <div className="relative z-10 flex h-full flex-col">
                 <div className="p-4">
                     <div className="mb-6 flex items-center gap-3 px-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#08CB00]/20 border border-[#08CB00]/50 shadow-[0_0_15px_rgba(8,203,0,0.3)]">
-                            <Box className="h-5 w-5 text-[#08CB00]" />
-                        </div>
+                        <img src="/favicon.ico" alt="Favicon" className="h-5 w-5" />
                         <div>
                             <h1 className="text-base font-bold tracking-widest text-[#08CB00]">DEVBRIDGE</h1>
                             <p className="text-[9px] text-muted-foreground uppercase tracking-widest">AI Architect Core</p>
