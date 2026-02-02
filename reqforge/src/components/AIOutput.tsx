@@ -43,43 +43,54 @@ export function AIOutput({ loading, data }: AIOutputProps) {
                 ) : (
                     <div className="space-y-6">
                         {/* Section: User Stories */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-[#08CB00] font-bold border-b border-[#08CB00]/20 pb-1 mb-2">
-                                <Check className="h-3 w-3" />
-                                <span>USER_STORIES.JSON</span>
+                        {data.stories && data.stories.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-[#08CB00] font-bold border-b border-[#08CB00]/20 pb-1 mb-2">
+                                    <Check className="h-3 w-3" />
+                                    <span>USER_STORIES.JSON</span>
+                                </div>
+                                <ul className="space-y-1 pl-4 text-gray-300">
+                                    {data.stories.map((story: string, i: number) => (
+                                        <li key={i}><span className="text-gray-600">{i + 1 < 10 ? `0${i + 1}` : i + 1}.</span> {story}</li>
+                                    ))}
+                                </ul>
                             </div>
-                            <ul className="space-y-1 pl-4 text-gray-300">
-                                <li><span className="text-gray-600">01.</span> As a user, I want to authenticate via OTP so I can access the system securely.</li>
-                                <li><span className="text-gray-600">02.</span> As a user, I want to reset my password using a verified email link.</li>
-                                <li><span className="text-gray-600">03.</span> As a system, I want to issue JWT tokens upon successful login.</li>
-                            </ul>
-                        </div>
+                        )}
 
                         {/* Section: APIs */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-[#08CB00] font-bold border-b border-[#08CB00]/20 pb-1 mb-2">
-                                <Code className="h-3 w-3" />
-                                <span>API_ENDPOINTS.YAML</span>
+                        {data.apis && data.apis.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-[#08CB00] font-bold border-b border-[#08CB00]/20 pb-1 mb-2">
+                                    <Code className="h-3 w-3" />
+                                    <span>API_ENDPOINTS.YAML</span>
+                                </div>
+                                <div className="space-y-1 pl-4">
+                                    {data.apis.map((api: any, i: number) => (
+                                        <div key={i} className="flex gap-2">
+                                            <span className={`font-bold w-12 ${api.method === 'GET' ? 'text-cyan-500' : api.method === 'DELETE' ? 'text-red-500' : 'text-[#08CB00]'}`}>
+                                                {api.method}
+                                            </span>
+                                            <span className="text-gray-300">{api.endpoint}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                            <div className="space-y-1 pl-4">
-                                <div className="flex gap-2"><span className="text-[#08CB00] font-bold w-12">POST</span> <span className="text-gray-300">/auth/login-otp</span></div>
-                                <div className="flex gap-2"><span className="text-[#08CB00] font-bold w-12">POST</span> <span className="text-gray-300">/auth/verify-otp</span></div>
-                                <div className="flex gap-2"><span className="text-cyan-500 font-bold w-12">GET</span> <span className="text-gray-300">/user/profile</span></div>
-                            </div>
-                        </div>
+                        )}
 
                         {/* Section: Edge Cases */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-amber-500 font-bold border-b border-amber-500/20 pb-1 mb-2">
-                                <AlertTriangle className="h-3 w-3" />
-                                <span>EDGE_CASES.MD</span>
+                        {data.edge_cases && data.edge_cases.length > 0 && (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-amber-500 font-bold border-b border-amber-500/20 pb-1 mb-2">
+                                    <AlertTriangle className="h-3 w-3" />
+                                    <span>EDGE_CASES.MD</span>
+                                </div>
+                                <ul className="space-y-1 pl-4 text-amber-200/80">
+                                    {data.edge_cases.map((ec: any, i: number) => (
+                                        <li key={i}>[{ec.type || 'WARN'}] {ec.desc || ec}</li>
+                                    ))}
+                                </ul>
                             </div>
-                            <ul className="space-y-1 pl-4 text-amber-200/80">
-                                <li>[WARN] OTP expiration or replay attacks.</li>
-                                <li>[WARN] Token revocation on password reset not handled.</li>
-                                <li>[PERF] Rate limiting missing on auth endpoints.</li>
-                            </ul>
-                        </div>
+                        )}
 
                         <div className="pt-4 text-[#08CB00] border-t border-[#08CB00]/10 mt-4">
                             &gt; Process completed successfully. Artifacts generated.

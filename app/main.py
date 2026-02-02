@@ -7,9 +7,18 @@ from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.qdrant import ensure_collection, search_user_memory, store_interaction, get_all_memories
 from app.ollama import get_embedding, generate_response
 from typing import List
-import uuid
+from fastapi.middleware.cors import CORSMiddleware
+import json
 
 app = FastAPI(title="Private AI Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
@@ -74,9 +83,7 @@ async def chat_endpoint(
     # Format memory for context
     context_str = "\n".join([f"- {m.text}" for m in relevant_memories])
     
-    # 3. Build System Prompt (Authentication & CoT Enforced)
-    # We differentiate based on user intent. If they ask for design artifacts, we force structure.
-    
+    # 3. Build System Prompt (Authentication & JSON Enforced)
     system_prompt = f"""
     You are a helpful assistant for the user {user.username}.
     
@@ -84,19 +91,18 @@ async def chat_endpoint(
     {context_str}
     
     INSTRUCTIONS:
-    1. If the user asks for requirements, user stories, API endpoints, or edge cases, you MUST use the following Chain of Thought format and structure:
+    You are an backend architect AI.
+    The user will give you a requirement.
+    You MUST return a VALID JSON object with the following structure:
+    {{
+        "stories": ["As a user, I want...", ...],
+        "apis": [{{ "method": "POST", "endpoint": "..." }}, ...],
+        "edge_cases": [{{ "type": "WARN", "desc": "..." }}, ...]
+    }}
     
-       *USER_STORIES.JSON
-       1. As a user...
-       
-       API_ENDPOINTS.YAML
-       POST /...
-       
-       EDGE_CASES.MD
-       [WARN] ...
-       
-    2. Otherwise, answer normally and helpfully.
-    3. Use the Memory Context to maintain conversation continuity.
+    DO NOT wrap in markdown code blocks.
+    DO NOT return any text outside the JSON.
+    Return ONLY the raw JSON string.
     """
     
     # 4. Generate Response

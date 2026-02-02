@@ -5,7 +5,36 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus, MessageSquare, Box } from "lucide-react"
 import NeuralBackground from "@/components/NeuralBackground"
 
+import { useState, useEffect } from "react"
+
 export function Sidebar() {
+    const [recents, setRecents] = useState<any[]>([])
+
+    useEffect(() => {
+        const fetchMemory = async () => {
+            // Public Bearer Token (Valid for 1 year)
+            const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJCYWxhIiwiZXhwIjoxODAxNTY0MTY0fQ.xr0-VQ5E9aNH9_qSWjegoFXFLNROV99s_opGXfNVYjA"
+
+            try {
+                const res = await fetch("http://localhost:8000/memory?limit=10", {
+                    headers: { "Authorization": `Bearer ${token}` }
+                })
+                if (res.ok) {
+                    const data = await res.json()
+                    setRecents(data)
+                }
+            } catch (e) {
+                console.error("Failed to fetch memory", e)
+            }
+        }
+
+        // Poll for memory updates every few seconds or just run once? 
+        // For simplicity run once on mount + maybe interval
+        fetchMemory()
+        const interval = setInterval(fetchMemory, 5000)
+        return () => clearInterval(interval)
+    }, [])
+
     return (
         <div className="relative flex h-full w-[260px] flex-col border-r border-[#08CB00]/20 bg-black">
 
@@ -42,14 +71,17 @@ export function Sidebar() {
                 <ScrollArea className="flex-1 px-2">
                     <div className="space-y-1 p-2">
                         <p className="px-2 text-[10px] font-bold uppercase text-muted-foreground/70 mb-2 tracking-wider">Recents</p>
-                        {["Payment Gateway Flow", "User Dashboard", "Auth Microservice", "Subscription Engine"].map((item, i) => (
+                        {recents.length === 0 && (
+                            <p className="px-2 text-xs text-muted-foreground italic">No history yet</p>
+                        )}
+                        {recents.map((item, i) => (
                             <Button
                                 key={i}
                                 variant="ghost"
                                 className="w-full justify-start gap-2 h-9 px-2 text-sm font-normal text-gray-400 hover:text-[#08CB00] hover:bg-[#08CB00]/5 transition-colors"
                             >
                                 <MessageSquare className="h-4 w-4 opacity-70" />
-                                <span className="truncate">{item}</span>
+                                <span className="truncate">{item.text?.substring(0, 25) || "Unknown"}...</span>
                             </Button>
                         ))}
                     </div>

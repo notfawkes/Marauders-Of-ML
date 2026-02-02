@@ -16,25 +16,45 @@ export default function Home() {
     // Initial cinematic loading delay
     const timer = setTimeout(() => {
       setIsAppLoading(false)
-    }, 3600) // 3.6s to match the loading bar animation slightly
+    }, 3600)
 
     return () => clearTimeout(timer)
   }, [])
 
-  const handleGenerate = (req: string) => {
+  const handleGenerate = async (req: string) => {
     setLoading(true)
     setOutputData(null)
 
-    // Simulate smart loading steps
-    // In a real app, this would be streaming or multiple states
-    setTimeout(() => {
-      setLoading(false)
-      setOutputData({
-        stories: true,
-        apis: true,
-        edgeCases: true
+    try {
+      // Public Bearer Token (Valid for 1 year)
+      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJCYWxhIiwiZXhwIjoxODAxNTY0MTY0fQ.xr0-VQ5E9aNH9_qSWjegoFXFLNROV99s_opGXfNVYjA"
+
+      const res = await fetch("http://localhost:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ message: req })
       })
-    }, 2500)
+
+      if (!res.ok) throw new Error("API Failed")
+
+      const data = await res.json()
+      // Parse the inner JSON string from the LLM
+      const parsedAI = JSON.parse(data.response)
+
+      setOutputData(parsedAI)
+    } catch (e) {
+      console.error(e)
+      setOutputData({
+        stories: ["Error connecting to backend"],
+        apis: [],
+        edge_cases: []
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
