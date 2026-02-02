@@ -3,9 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { FileText, Code, AlertTriangle, Sparkles } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Play, FileText, Sparkles } from "lucide-react"
 
 interface RequirementInputProps {
     onGenerate: (req: string) => void
@@ -14,77 +12,57 @@ interface RequirementInputProps {
 
 export function RequirementInput({ onGenerate, isGenerating }: RequirementInputProps) {
     const [input, setInput] = useState("")
-    const [selectedModes, setSelectedModes] = useState<string[]>(["stories", "apis", "edge-cases"])
-
-    const toggleMode = (mode: string) => {
-        setSelectedModes(prev =>
-            prev.includes(mode) ? prev.filter(m => m !== mode) : [...prev, mode]
-        )
-    }
 
     const handleSample = () => {
         setInput("Build an authentication system where users login via OTP, receive a JWT token, and can reset passwords securely.")
     }
 
     return (
-        <div className="flex flex-1 flex-col items-center justify-center p-8">
-            <div className="w-full max-w-2xl space-y-8">
-                <div className="space-y-2 text-center">
-                    <h2 className="text-3xl font-semibold tracking-tight">Translate requirements into specs</h2>
-                    <p className="text-muted-foreground">Paste ambiguous business requirements and convert them into structured developer-ready outputs.</p>
-                </div>
-
-                <div className="flex justify-center gap-2">
-                    <Badge
-                        variant={selectedModes.includes("stories") ? "default" : "outline"}
-                        className="cursor-pointer gap-1 px-3 py-1"
-                        onClick={() => toggleMode("stories")}
-                    >
-                        <FileText className="h-3 w-3" /> User Stories
-                    </Badge>
-                    <Badge
-                        variant={selectedModes.includes("apis") ? "default" : "outline"}
-                        className="cursor-pointer gap-1 px-3 py-1"
-                        onClick={() => toggleMode("apis")}
-                    >
-                        <Code className="h-3 w-3" /> API Specs
-                    </Badge>
-                    <Badge
-                        variant={selectedModes.includes("edge-cases") ? "default" : "outline"}
-                        className="cursor-pointer gap-1 px-3 py-1"
-                        onClick={() => toggleMode("edge-cases")}
-                    >
-                        <AlertTriangle className="h-3 w-3" /> Edge Cases
-                    </Badge>
-                </div>
-
-                <div className="relative rounded-xl border bg-card p-4 shadow-sm focus-within:ring-2 focus-within:ring-ring transition-all">
-                    <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Example: Users should be able to sign up with OTP, receive a token, and access a personalized dashboard..."
-                        className="min-h-[240px] resize-none border-0 bg-transparent p-4 focus-visible:ring-0 text-base"
-                    />
-                    <div className="absolute bottom-4 right-4 left-4 flex justify-between items-center">
-                        <Button variant="ghost" size="sm" onClick={handleSample} className="text-xs text-muted-foreground hover:text-foreground">
-                            Try Sample Requirement
-                        </Button>
-                        <Button
-                            size="lg"
-                            onClick={() => onGenerate(input)}
-                            disabled={!input || isGenerating}
-                            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]"
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Sparkles className="mr-2 h-4 w-4 animate-spin" /> Generating...
-                                </>
-                            ) : (
-                                "Generate Engineering Plan"
-                            )}
-                        </Button>
+        <div className="flex h-full flex-col">
+            {/* Editor Header / Toolbar */}
+            <div className="flex items-center justify-between border-b bg-muted/40 px-4 py-2">
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-md bg-background border px-3 py-1 text-sm text-muted-foreground shadow-sm">
+                        <FileText className="h-3 w-3 text-blue-400" />
+                        <span>requirements.prompt</span>
                     </div>
                 </div>
+
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={handleSample} className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                        Insert Sample
+                    </Button>
+                    <div className="h-4 w-[1px] bg-border" />
+                    <Button
+                        size="sm"
+                        onClick={() => onGenerate(input)}
+                        disabled={!input || isGenerating}
+                        className="h-7 bg-green-600 hover:bg-green-700 text-white gap-2 text-xs"
+                    >
+                        {isGenerating ? (
+                            <Sparkles className="h-3 w-3 animate-spin" />
+                        ) : (
+                            <Play className="h-3 w-3 fill-current" />
+                        )}
+                        Run Translation
+                    </Button>
+                </div>
+            </div>
+
+            {/* Editor Body */}
+            <div className="relative flex-1 bg-[#0f1117]">
+                <div className="absolute left-0 top-0 bottom-0 w-12 border-r bg-muted/10 flex flex-col items-end pt-4 pr-3 text-xs text-muted-foreground/30 font-mono select-none">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <div key={i} className="leading-6">{i + 1}</div>
+                    ))}
+                </div>
+                <Textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="// Describe your feature requirements here...
+// Example: Users should be able to login with Google..."
+                    className="h-full w-full resize-none border-0 bg-transparent p-4 pl-16 font-mono text-sm leading-6 focus-visible:ring-0 text-gray-300"
+                />
             </div>
         </div>
     )

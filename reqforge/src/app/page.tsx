@@ -28,9 +28,13 @@ export default function Home() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground font-sans antialiased">
       <Sidebar />
-      <main className="grid flex-1 grid-cols-1 md:grid-cols-[1fr_400px]">
-        <RequirementInput onGenerate={handleGenerate} isGenerating={loading} />
-        <AIOutput loading={loading} data={outputData} />
+      <main className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex-1 overflow-hidden border-b bg-background">
+          <RequirementInput onGenerate={handleGenerate} isGenerating={loading} />
+        </div>
+        <div className="h-[45%] min-h-[200px] overflow-hidden bg-[#0a0a0a]">
+          <AIOutput loading={loading} data={outputData} />
+        </div>
       </main>
     </div>
   )
