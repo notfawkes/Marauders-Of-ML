@@ -1,14 +1,15 @@
 from datetime import timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from app.models import User, UserCreate, Token, ChatRequest, ChatResponse, MemoryItem
-from app.auth import get_current_user, users_collection, get_password_hash, verify_password, create_access_token
+from app.models import User, UserCreate, Token, ChatRequest, ChatResponse, MemoryItem, ChatSession, ChatMessage
+from app.auth import get_current_user, users_collection, chats_collection, get_password_hash, verify_password, create_access_token
 from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.qdrant import ensure_collection, search_user_memory, store_interaction, get_all_memories
 from app.ollama import get_embedding, generate_response
-from typing import List
+from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 import uuid
+from datetime import datetime
 
 app = FastAPI(title="Private AI Backend")
 
@@ -64,6 +65,24 @@ async def login_for_access_token(user_data: UserCreate):
 # ---------------------------------------------------------
 # Chat & Memory Endpoints
 # ---------------------------------------------------------
+
+@app.get("/chats", response_model=List[ChatSession])
+async def get_all_chats(user: User = Depends(get_current_user)):
+    """Retrieve all chat sessions for the current user."""
+    cursor = chats_collection.find({"user_id": user.user_id}).sort("updated_at", -1)
+    chats = []
+    for doc in cursor:
+        chats.append(ChatSession(**doc))
+    return chats
+
+@app.get("/chats/{conversation_id}", response_model=ChatSession)
+async def get_chat_details(conversation_id: str, user: User = Depends(get_current_user)):
+    """Retrieve details of a specific chat session."""
+    chat = chats_collection.find_one({"conversation_id": conversation_id, "user_id": user.user_id})
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return ChatSession(**chat)
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(
     request: ChatRequest,
@@ -71,6 +90,25 @@ async def chat_endpoint(
 ):
     user_input = request.message
     
+    # 0. Handle Conversation ID
+    conversation_id = request.conversation_id
+    chat_session = None
+
+    if conversation_id:
+        chat_doc = chats_collection.find_one({"conversation_id": conversation_id, "user_id": user.user_id})
+        if not chat_doc:
+             raise HTTPException(status_code=404, detail="Conversation not found")
+        chat_session = ChatSession(**chat_doc)
+    else:
+        conversation_id = str(uuid.uuid4())
+        chat_session = ChatSession(
+            conversation_id=conversation_id,
+            user_id=user.user_id,
+            name=user_input[:30] + "..." if len(user_input) > 30 else user_input
+        )
+        # We will insert it after we get the response to ensure atomic-ish feel or just insert now?
+        # Let's insert/upsert at the end.
+
     # 1. Embed user message
     try:
         query_vector = get_embedding(user_input)
@@ -82,15 +120,24 @@ async def chat_endpoint(
     
     # Format memory for context
     context_str = "\n".join([f"- {m.text}" for m in relevant_memories])
+
+    # 2.5 Retrieve recent chat history for IMMEDIATE context (e.g. last 5 messages)
+    # This helps the model maintain flow within the current session
+    history_str = ""
+    if chat_session.messages:
+        recent_msgs = chat_session.messages[-6:] # Last 3 turns
+        for m in recent_msgs:
+            history_str += f"{m.role.capitalize()}: {m.content}\n"
     
     # 3. Build System Prompt (Authentication & CoT Enforced)
-    # We differentiate based on user intent. If they ask for design artifacts, we force structure.
-    
     system_prompt = f"""
     You are a helpful assistant for the user {user.username}.
     
-    MEMORY CONTEXT:
+    MEMORY CONTEXT (Long-term):
     {context_str}
+
+    CURRENT CONVERSATION HISTORY:
+    {history_str}
     
     INSTRUCTIONS:
     1. If the user asks for requirements, user stories, API endpoints, or edge cases, you MUST use the following Chain of Thought format and structure:
@@ -114,15 +161,30 @@ async def chat_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail="LLM service unavailable")
 
-    # 5. Store Interaction in Vector DB
+    # 5. Store Interaction in Vector DB (Memory)
     combined_text = f"User: {user_input}\nAssistant: {ai_response}"
     combined_vector = get_embedding(combined_text)
     
     store_interaction(user.user_id, combined_text, combined_vector)
+
+    # 6. Store in MongoDB (Chat History)
+    user_msg = ChatMessage(role="user", content=user_input)
+    ai_msg = ChatMessage(role="assistant", content=ai_response)
+    
+    chat_session.messages.append(user_msg)
+    chat_session.messages.append(ai_msg)
+    chat_session.updated_at = datetime.utcnow()
+    
+    chats_collection.update_one(
+        {"conversation_id": conversation_id},
+        {"$set": chat_session.model_dump()},
+        upsert=True
+    )
     
     return ChatResponse(
         response=ai_response,
-        user_id=user.user_id
+        user_id=user.user_id,
+        conversation_id=conversation_id
     )
 
 @app.get("/memory", response_model=List[MemoryItem])

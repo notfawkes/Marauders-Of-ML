@@ -14,6 +14,7 @@ from app.models import User, TokenData
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 users_collection = db[USER_COLLECTION]
+chats_collection = db["chats"]
 
 # ---------------------------------------------------------
 # Security Configuration

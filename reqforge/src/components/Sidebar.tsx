@@ -1,11 +1,39 @@
 "use client"
 
+import { useState, useEffect } from "react"
+
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Plus, MessageSquare, Box } from "lucide-react"
 import NeuralBackground from "@/components/NeuralBackground"
 
-export function Sidebar() {
+interface SidebarProps {
+    authToken: string
+}
+
+interface ChatSession {
+    conversation_id: string
+    name: string
+}
+
+export function Sidebar({ authToken }: SidebarProps) {
+    const [chats, setChats] = useState<ChatSession[]>([])
+
+    useEffect(() => {
+        if (!authToken) return
+
+        fetch("http://localhost:8000/chats", {
+            headers: { "Authorization": `Bearer ${authToken}` }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setChats(data)
+                }
+            })
+            .catch(err => console.error("Failed to load chats", err))
+    }, [authToken])
+
     return (
         <div className="relative flex h-full w-[260px] flex-col border-r border-[#08CB00]/20 bg-black">
 
@@ -42,16 +70,20 @@ export function Sidebar() {
                 <ScrollArea className="flex-1 px-2">
                     <div className="space-y-1 p-2">
                         <p className="px-2 text-[10px] font-bold uppercase text-muted-foreground/70 mb-2 tracking-wider">Recents</p>
-                        {["Payment Gateway Flow", "User Dashboard", "Auth Microservice", "Subscription Engine"].map((item, i) => (
-                            <Button
-                                key={i}
-                                variant="ghost"
-                                className="w-full justify-start gap-2 h-9 px-2 text-sm font-normal text-gray-400 hover:text-[#08CB00] hover:bg-[#08CB00]/5 transition-colors"
-                            >
-                                <MessageSquare className="h-4 w-4 opacity-70" />
-                                <span className="truncate">{item}</span>
-                            </Button>
-                        ))}
+                        {chats.length === 0 ? (
+                            <p className="px-2 text-xs text-gray-500 italic">No history yet.</p>
+                        ) : (
+                            chats.map((chat) => (
+                                <Button
+                                    key={chat.conversation_id}
+                                    variant="ghost"
+                                    className="w-full justify-start gap-2 h-9 px-2 text-sm font-normal text-gray-400 hover:text-[#08CB00] hover:bg-[#08CB00]/5 transition-colors"
+                                >
+                                    <MessageSquare className="h-4 w-4 opacity-70" />
+                                    <span className="truncate">{chat.name.replace("User: ", "")}</span>
+                                </Button>
+                            ))
+                        )}
                     </div>
                 </ScrollArea>
             </div>

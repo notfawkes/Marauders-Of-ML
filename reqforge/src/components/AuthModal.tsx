@@ -47,6 +47,7 @@ export default function AuthModal({ onLoginSuccess }: AuthModalProps) {
             }
 
             onLoginSuccess(data.access_token, loginUser)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.message)
         } finally {
@@ -75,6 +76,7 @@ export default function AuthModal({ onLoginSuccess }: AuthModalProps) {
 
             setRegSuccess(true)
             // Optional: Auto-login or ask user to switch tab
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.message)
         } finally {
