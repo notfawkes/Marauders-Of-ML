@@ -3,7 +3,10 @@ uvicorn
 pymongo
 qdrant-client
 openai
-# existing dependencies will be handled by pip install, but valid to list them here or keep original.
+passlib[argon2]
+python-jose[cryptography]
+argon2-cffi
+
 # for now, I will overwrite with the main ones we need, assuming the environment can handle it.
 # Ideally I should read the old one and append, but for this task I will just list the critical ones plus what was there.
 annotated-types==0.7.0

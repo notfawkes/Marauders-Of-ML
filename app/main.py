@@ -7,9 +7,18 @@ from app.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.qdrant import ensure_collection, search_user_memory, store_interaction, get_all_memories
 from app.ollama import get_embedding, generate_response
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 import uuid
 
 app = FastAPI(title="Private AI Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"http://(?:localhost|127\.0\.0\.1):\d+",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
