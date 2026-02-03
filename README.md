@@ -1,6 +1,7 @@
 # DevBridge - AI-Powered Requirements Architect
 
 [![Watch the Demo](assets/demo-thumbnail.jpg)](assets/DemoVideo.mp4?raw=true)
+Click the above image to watch demo video
 
 DevBridge is an AI-powered requirements gathering and architectural design tool. It uses a local LLM (Ollama) to generate user stories, API endpoints, and edge cases based on user input, storing conversation history in proper contexts.
 
